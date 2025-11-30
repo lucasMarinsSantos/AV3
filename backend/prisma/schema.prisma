@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoAeronave {
+  COMERCIAL
+  MILITAR
+}
+
+enum TipoPeca {
+  NACIONAL
+  IMPORTADA
+}
+
+enum StatusPeca {
+  EMPRODUCAO
+  EMTRANSPORTE
+  PRONTA
+}
+
+enum StatusEtapa {
+  PENDENTE
+  ANDAMENTO
+  CONCLUIDA
+}
+
+enum NivelPermissao {
+  ADMINISTRADOR
+  ENGENHEIRO
+  OPERADOR
+}
+
+enum TipoTeste {
+  ELETRICO
+  HIDRAULICO
+  AERODINAMICO
+}
+
+enum ResultadoTeste {
+  APROVADO
+  REPROVADO
+}
+
+model Aeronave {
+  codigo     String        @id
+  modelo     String
+  tipo       TipoAeronave
+  capacidade Int
+  alcance    Int
+  pecas      Peca[]
+  etapas     Etapa[]
+  testes     Teste[]
+  relatorio  Relatorio?
+}
+
+model Peca {
+  id         Int         @id @default(autoincrement())
+  nome       String
+  tipo       TipoPeca
+  fornecedor String
+  status     StatusPeca
+  aeronaveId String
+  aeronave   Aeronave    @relation(fields: [aeronaveId], references: [codigo], onDelete: Cascade)
+}
+
+model Etapa {
+  id           Int            @id @default(autoincrement())
+  nome         String
+  prazo        DateTime
+  status       StatusEtapa
+  aeronaveId   String
+  aeronave     Aeronave       @relation(fields: [aeronaveId], references: [codigo], onDelete: Cascade)
+  funcionarios Funcionario[]
+}
+
+model Funcionario {
+  id              Int             @id @default(autoincrement())
+  nome            String
+  telefone        String
+  endereco        String
+  usuario         String          @unique
+  senha           String
+  nivelPermissao  NivelPermissao
+  etapas          Etapa[]
+}
+
+model Teste {
+  id         Int             @id @default(autoincrement())
+  tipo       TipoTeste
+  resultado  ResultadoTeste
+  data       DateTime        @default(now())
+  aeronaveId String
+  aeronave   Aeronave        @relation(fields: [aeronaveId], references: [codigo], onDelete: Cascade)
+}
+
+model Relatorio {
+  id           Int      @id @default(autoincrement())
+  aeronaveId   String   @unique
+  nomeCliente  String
+  dataEntrega  DateTime
+  conteudo     String   @db.Text
+  aeronave     Aeronave @relation(fields: [aeronaveId], references: [codigo], onDelete: Cascade)
+}
+
+model Metrica {
+  id                 Int      @id @default(autoincrement())
+  rota               String
+  metodo             String
+  latencia           Float
+  tempoProcessamento Float
+  tempoResposta      Float
+  timestamp          DateTime @default(now())
+  usuarios           Int
+}
